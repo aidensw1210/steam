@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -12,16 +11,11 @@
 
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=b67386e669a6fecc4fcca734d5bc3f9f"></script>
     <script>
-        function getBearing(lat1, lon1, lat2, lon2) {
-            var lat1_rad = lat1 * Math.PI / 180;
-            var lat2_rad = lat2 * Math.PI / 180;
-            var lon_diff_rad = (lon2 - lon1) * Math.PI / 180;
-            var y = Math.sin(lon_diff_rad) * Math.cos(lat2_rad);
-            var x = Math.cos(lat1_rad) * Math.sin(lat2_rad) - Math.sin(lat1_rad) * Math.cos(lat2_rad) * Math.cos(lon_diff_rad);
-
-            return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
-        }
-        if (navigator.geolocation) {
+        var map = null;
+var loc1Marker = null;
+var loc2Marker = null;
+var deviceOrientation;
+if (navigator.geolocation) {
     navigator.geolocation.watchPosition(function(position) {
         var lat = position.coords.latitude;
         var lng = position.coords.longitude;
@@ -50,7 +44,16 @@
             loc2Marker.setPosition(loc2);
         }
 
-        function getDistance(lat1, lon1, lat2, lon2) {
+function initializeMap(lat, lng) {
+    var mapContainer = document.getElementById('map');
+    var mapOptions = {
+        center: new kakao.maps.LatLng(lat, lng),
+        level: 5,
+        mapTypeId: kakao.maps.MapTypeId.ROADMAP
+    };
+    map = new kakao.maps.Map(mapContainer, mapOptions);
+}
+function getDistance(lat1, lon1, lat2, lon2) {
             var radLat1 = Math.PI * lat1 / 180;
             var radLat2 = Math.PI * lat2 / 180;
             var theta = lon1 - lon2;
@@ -66,10 +69,34 @@
 
             return dist;
         }
-
         
-        var map, loc1Marker, loc2Marker;
-var deviceOrientation;
+
+         function getBearing(lat1, lon1, lat2, lon2) {
+            var lat1_rad = lat1 * Math.PI / 180;
+            var lat2_rad = lat2 * Math.PI / 180;
+            var lon_diff_rad = (lon2 - lon1) * Math.PI / 180;
+            var y = Math.sin(lon_diff_rad) * Math.cos(lat2_rad);
+            var x = Math.cos(lat1_rad) * Math.sin(lat2_rad) - Math.sin(lat1_rad) * Math.cos(lat2_rad) * Math.cos(lon_diff_rad);
+
+            return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
+        }
+
+
+
+
+function updateMapCenter(lat, lng) {
+    map.setCenter(new kakao.maps.LatLng(lat, lng));
+}
+
+function updateMarkers(loc1, loc2) {
+    if (!loc1Marker) {
+        loc1Marker = new kakao.maps.Marker({ map: map, position: loc1 });
+        loc2Marker = new kakao.maps.Marker({ map: map, position: loc2 });
+    } else {
+        loc1Marker.setPosition(loc1);
+        loc2Marker.setPosition(loc2);
+    }
+}
 
 function handleOrientation(event) {
     deviceOrientation = event.alpha;
@@ -82,19 +109,6 @@ function updateBearing() {
     var arrow = document.getElementById('arrow');
     arrow.style.transform = 'rotate(' + (deviceOrientation + bearing) + 'deg)';
 }
-
-
-
-        
-        var dist = getDistance(loc1.getLat(), loc1.getLng(), loc2.getLat(), loc2.getLng());
-        var bearing = getBearing(loc1.getLat(), loc1.getLng(), loc2.getLat(), loc2.getLng());
-        document.getElementById("info").innerHTML = "두 지점 사이의 거리는 " + dist + "m 이고, 방위각은 " + bearing + "도 입니다.";
-
-        window.addEventListener('deviceorientation', handleOrientation);
-        updateBearing();
-
-    }, function(error) {
-        alert("위치 정보를 가져오는 데 실패했습니다: " + error.message);
     });
 } else {
     alert("이 브라우저는 Geolocation API를 지원하지 않습니다.");
