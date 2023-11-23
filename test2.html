@@ -11,8 +11,9 @@
     }
     #map {
         width: 100%;
-        height: 90vh;
+        height: 80vh; /* 맵의 높이를 줄입니다. */
         border: 1px solid black;
+        margin-bottom: 20px; /* 맵 아래에 간격을 추가합니다. */
     }
     .scroll-btn {
         display: flex;
@@ -22,6 +23,7 @@
         cursor: pointer;
         border-radius: 5px;
         text-align: center;
+        margin-bottom: 40px;
     }
     .centered-content {
         display: flex;
@@ -29,9 +31,11 @@
         justify-content: center;
         align-items: center;
         height: 100vh;
+        margin-bottom: 20px; /* 화살표와 h1 아래에 간격을 추가합니다. */
     }
     #arrow {
         margin-bottom: 20px;
+        width: 30%;
     }
    </style>
 </head>
@@ -42,6 +46,7 @@
         <img id="arrow" src="steam.png" /> <!-- 화살표 이미지 -->
         <h1 id="info"></h1>
     </div>
+    <div class="scroll-btn" onclick="scrollToMap()">맵으로 돌아가기</div>
 
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=b67386e669a6fecc4fcca734d5bc3f9f"></script>
     <script>
@@ -175,12 +180,16 @@ if (navigator.geolocation) {
 } else {
     alert("이 브라우저는 Geolocation API를 지원하지 않습니다.");
 }
- 
         // 기존에 있던 코드들...
 
         function scrollToInfo() {
             const info = document.querySelector('.centered-content');
-            info.scrollIntoView({ behavior: 'smooth' });
+            info.scrollIntoView({ behavior: 'smooth', block: 'end' }); /* 스크롤이 페이지의 끝까지 내려가도록 수정합니다. */
+        }
+
+        function scrollToMap() {
+            const map = document.querySelector('#map');
+            map.scrollIntoView({ behavior: 'smooth' });
         }
     </script>
 </body>
