@@ -3,11 +3,44 @@
 <head>
    <meta charset="utf-8">
    <title>다음 지도 API</title>
+   <style>
+    #container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 100vh;
+}
+
+#map {
+    width: 70%;
+    height: 80%;
+    border: 1px solid black;
+}
+
+#info-panel {
+    width: 25%;
+    height: 80%;
+    border: 1px solid black;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.centered-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+   </style>
 </head>
 <body>
     <div id="map" style="width:100%;height:350px;"></div>
-    <img id="arrow" src="steam.jpg" /> <!-- 화살표 이미지 -->
-    <h1 id="info"></h1>
+    <div class="centered-content">
+        <img id="arrow" src="steam.jpg" /> <!-- 화살표 이미지 -->
+        <h1 id="info"></h1>
+    </div>
 
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=b67386e669a6fecc4fcca734d5bc3f9f"></script>
     <script>
@@ -24,6 +57,12 @@ function initializeMap(lat, lng) {
         mapTypeId: kakao.maps.MapTypeId.ROADMAP
     };
     map = new kakao.maps.Map(mapContainer, mapOptions);
+
+    // 지도를 클릭할 때마다 loc2를 업데이트합니다.
+    kakao.maps.event.addListener(map, 'click', function(mouseEvent) {
+        var latlng = mouseEvent.latLng;
+        updateLoc2(latlng);
+    });
 }
 
 function updateMapCenter(lat, lng) {
@@ -33,9 +72,13 @@ function updateMapCenter(lat, lng) {
 function updateMarkers(loc1, loc2) {
     if (!loc1Marker) {
         loc1Marker = new kakao.maps.Marker({ map: map, position: loc1 });
-        loc2Marker = new kakao.maps.Marker({ map: map, position: loc2 });
     } else {
         loc1Marker.setPosition(loc1);
+    }
+
+    if (!loc2Marker) {
+        loc2Marker = new kakao.maps.Marker({ map: map, position: loc2 });
+    } else {
         loc2Marker.setPosition(loc2);
     }
 }
@@ -83,6 +126,23 @@ function getBearing(lat1, lon1, lat2, lon2) {
     return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
 }
 
+function updateLoc2(latlng) {
+    if (!map || !loc2Marker) {
+        return;
+    }
+
+    loc2Marker.setPosition(latlng);
+
+    var loc1 = loc1Marker.getPosition();
+    var loc2 = latlng;
+
+    var dist = getDistance(loc1.getLat(), loc1.getLng(), loc2.getLat(), loc2.getLng());
+    var bearing = getBearing(loc1.getLat(), loc1.getLng(), loc2.getLat(), loc2.getLng());
+    document.getElementById("info").innerHTML = "두 지점 사이의 거리는 " + dist + "m 이고, 방위각은 " + bearing + "도 입니다.";
+
+    updateBearing();
+}
+
 if (navigator.geolocation) {
     navigator.geolocation.watchPosition(function(position) {
         var lat = position.coords.latitude;
@@ -95,7 +155,7 @@ if (navigator.geolocation) {
         }
 
         var loc1 = new kakao.maps.LatLng(lat, lng);
-        var loc2 = new kakao.maps.LatLng(lat + 0.001, lng + 0.001);
+        var loc2 = loc2Marker ? loc2Marker.getPosition() : new kakao.maps.LatLng(lat + 0.001, lng + 0.001);
 
         updateMarkers(loc1, loc2);
 
