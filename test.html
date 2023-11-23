@@ -77,7 +77,6 @@
           return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
       }
 
-                updateInfo();
 
                 function updateInfo() {
                     var dist = getDistance(loc1.getLat(), loc1.getLng(), loc2.getLat(), loc2.getLng());
@@ -91,6 +90,7 @@
                     var rotation = 360 - deviceHeading + bearing;
                     arrow.style.transform = 'rotate(' + rotation + 'deg)';
                 }
+                updateInfo();
             }, function(error) {
                 alert("위치 정보를 가져오는 데 실패했습니다: " + error.message);
             });
