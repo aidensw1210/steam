@@ -1,53 +1,47 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <title>다음 지도 API</title>
-    <style>
-        #arrow {
-            width: 50px;
-            height: 50px;
-        }
-    </style>
+   <meta charset="utf-8">
+   <title>다음 지도 API</title>
+   <style>
+ </style>
+
 </head>
 <body>
     <div id="map" style="width:100%px;height:350px;"></div>
     <img id="arrow" src="steam.jpg" /> <!-- 화살표 이미지 -->
     <h1 id="info"></h1>
 
+
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=b67386e669a6fecc4fcca734d5bc3f9f"></script>
     <script>
-        var deviceHeading = 0;
-        if (window.DeviceOrientationEvent) {
-            window.addEventListener('deviceorientation', function(event) {
-                deviceHeading = event.alpha;
-            }, false);
-        } else {
-            alert('이 브라우저는 DeviceOrientation을 지원하지 않습니다.');
-        }
-
         if (navigator.geolocation) {
-            var watchID = navigator.geolocation.watchPosition(function(position) {
-                var lat = position.coords.latitude;
-                var lng = position.coords.longitude;
-                console.log(lat, lng)
+            navigator.geolocation.watchPosition(function(position) {
+            // Get the latitude and longitude from the position
+            var lat = position.coords.latitude;
+            var lng = position.coords.longitude;
+            console.log(lat, lng)
 
-                var mapContainer = document.getElementById('map'), 
-                mapOption = {
-                    center: new kakao.maps.LatLng(lat, lng), 
-                    level: 5, 
-                    mapTypeId : kakao.maps.MapTypeId.ROADMAP 
-                };
+            var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+        mapOption = {
+            center: new kakao.maps.LatLng(lat, lng), // 지도의 중심좌표
+            level: 5, // 지도의 확대 레벨
+            mapTypeId : kakao.maps.MapTypeId.ROADMAP // 지도종류
+        };
 
-                var map = new kakao.maps.Map(mapContainer, mapOption); 
+      // 지도를 생성한다 
+      var map = new kakao.maps.Map(mapContainer, mapOption); 
+      
+      // 두 지점의 위도, 경도
+      var loc1 = new kakao.maps.LatLng(lat, lng);
+      var loc2 = new kakao.maps.LatLng(lat+0.001, lng+0.001);
 
-                var loc1 = new kakao.maps.LatLng(lat, lng);
-                var loc2 = new kakao.maps.LatLng(lat+0.001, lng+0.00001);
+      // 두 지점을 지도에 표시
+      new kakao.maps.Marker({ map, position: loc1 }).setMap(map);
+      new kakao.maps.Marker({ map, position: loc2 }).setMap(map);
 
-                new kakao.maps.Marker({ map, position: loc1 }).setMap(map);
-                new kakao.maps.Marker({ map, position: loc2 }).setMap(map);
-                
-        function getDistance(lat1, lon1, lat2, lon2) {
+      // 두 지점 사이의 거리 계산
+      function getDistance(lat1, lon1, lat2, lon2) {
           if ((lat1 == lat2) && (lon1 == lon2))
               return 0;
 
@@ -67,7 +61,9 @@
 
           return dist;
       }
-                function getBearing(lat1, lon1, lat2, lon2) {
+
+      // 두 지점 사이의 방위각 계산
+      function getBearing(lat1, lon1, lat2, lon2) {
           var lat1_rad = lat1 * Math.PI / 180;
           var lat2_rad = lat2 * Math.PI / 180;
           var lon_diff_rad = (lon2 - lon1) * Math.PI / 180;
@@ -77,26 +73,41 @@
           return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
       }
 
+      // 거리와 방위각을 계산하고 출력
+      var dist = getDistance(loc1.getLat(), loc1.getLng(), loc2.getLat(), loc2.getLng());
+      var bearing = getBearing(loc1.getLat(), loc1.getLng(), loc2.getLat(), loc2.getLng());
+      document.getElementById("info").innerHTML = "두 지점 사이의 거리는 " + dist + "m 이고, 방위각은 " + bearing + "도 입니다.";
 
-                function updateInfo() {
-                    var dist = getDistance(loc1.getLat(), loc1.getLng(), loc2.getLat(), loc2.getLng());
-                    var bearing = getBearing(loc1.getLat(), loc1.getLng(), loc2.getLat(), loc2.getLng());
-                    document.getElementById("info").innerHTML = "두 지점 사이의 거리는 " + dist + "m 이고, 방위각은 " + bearing + "도 입니다.";
-                    updateBearing(bearing);
-                }
+      var deviceOrientation;
 
-                function updateBearing(bearing) {
-                    var arrow = document.getElementById('arrow');
-                    var rotation = 360 - deviceHeading + bearing;
-                    arrow.style.transform = 'rotate(' + rotation + 'deg)';
-                }
-                updateInfo();
-            }, function(error) {
-                alert("위치 정보를 가져오는 데 실패했습니다: " + error.message);
-            });
+        function handleOrientation(event) {
+            deviceOrientation = event.alpha;
+            updateBearing();
+        }
+
+        function updateBearing() {
+            var bearing = getBearing(loc1.getLat(), loc1.getLng(), loc2.getLat(), loc2.getLng());
+
+            // 북쪽의 각도와 방위각을 더하여 화살표 이미지를 회전시킵니다.
+            var arrow = document.getElementById('arrow');
+            
+            arrow.style.transform = 'rotate(' + (deviceOrientation + bearing) + 'deg)';
+        }
+
+        // deviceorientation 이벤트 리스너 등록
+        window.addEventListener('deviceorientation', handleOrientation);
+
+        // updateBearing 함수를 호출하여 화살표 회전을 시작합니다.
+        updateBearing();
+
+        }, function(error) {
+            // Handle error
+            alert("위치 정보를 가져오는 데 실패했습니다: " + error.message);
+        });
+
         } else {
             alert("이 브라우저는 Geolocation API를 지원하지 않습니다.");
         }
-    </script>
+   </script>
 </body>
 </html>
