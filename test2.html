@@ -102,7 +102,7 @@ function updateBearing() {
     var bearing = getBearing(loc1Marker.getPosition().getLat(), loc1Marker.getPosition().getLng(), loc2Marker.getPosition().getLat(), loc2Marker.getPosition().getLng());
 
     var arrow = document.getElementById('arrow');
-    arrow.style.transform = 'rotate(' + (deviceOrientation + bearing + 95) + 'deg)';
+    arrow.style.transform = 'rotate(' + (deviceOrientation + bearing) + 'deg)';
 }
 
 function getDistance(lat1, lon1, lat2, lon2) {
